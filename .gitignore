@@ -90,4 +90,4 @@ ENV/
 # Rope project settings
 .ropeproject
 
-example/dvwa_crawl.xml.csv
+example/dvwa_crawl.csv

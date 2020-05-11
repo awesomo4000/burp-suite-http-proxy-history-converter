@@ -4,6 +4,7 @@ Python script that converts Burp Suite HTTP proxy history files to CSV or HTML f
 from __future__ import unicode_literals
 from __future__ import print_function
 
+import os
 import sys
 import io
 import argparse
@@ -73,7 +74,7 @@ def set_csv_delimiter(csv_delimiter):
 
 class FormatHandlerBase(object):
     def __init__(self, filename):
-        self.filename = filename + self.FILENAME_SUFFIX
+        self.filename = f'{os.path.splitext(filename)[0]}{self.FILENAME_SUFFIX}'
 
 
 class HtmlFormatHandler(FormatHandlerBase):
