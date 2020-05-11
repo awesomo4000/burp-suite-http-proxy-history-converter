@@ -17,7 +17,7 @@ available.
 
 Download the script and install requirements:
 
-    $ git clone https://github.com/falconws/burp-suite-http-proxy-history-converter
+    $ git clone https://github.com/falconws/burp-suite-http-proxy-history-converter.git
     $ cd burp-suite-http-proxy-history-converter
     $ pip install --requirement=requirements.txt
 
