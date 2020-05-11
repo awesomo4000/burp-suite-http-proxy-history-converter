@@ -29,8 +29,8 @@ def main():
 def parse_arguments():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('filename', help='Burp Suite HTTP proxy history file')
-    parser.add_argument('--format', default='html', choices=FORMATS.keys(),
-                        help='output format, default: html')
+    parser.add_argument('--format', default='csv', choices=FORMATS.keys(),
+                        help='output format, default: csv')
     parser.add_argument('--csv-delimiter', choices=(',', ';'),
                         help='CSV delimiter, default: ,')
     return parser.parse_args()
