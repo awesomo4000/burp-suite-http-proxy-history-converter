@@ -4,6 +4,7 @@ Python script that converts Burp Suite HTTP proxy history files to CSV or HTML f
 from __future__ import unicode_literals
 from __future__ import print_function
 
+import os
 import sys
 import io
 import argparse
@@ -12,9 +13,10 @@ import base64
 
 import xmltodict
 from backports import csv
-
+from builtins import str
 
 _g_csv_delimiter = ','
+
 
 def main():
     args = parse_arguments()
@@ -23,79 +25,56 @@ def main():
     http_history = parse_http_history(args.filename)
     convert_to_output_file(http_history, format_handler)
 
+
 def parse_arguments():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('filename', help='Burp Suite HTTP proxy history file')
-    parser.add_argument('--format', default='html', choices=FORMATS.keys(),
-            help='output format, default: html')
+    parser.add_argument('--format', default='csv', choices=FORMATS.keys(),
+                        help='output format, default: csv')
     parser.add_argument('--csv-delimiter', choices=(',', ';'),
-            help='CSV delimiter, default: ,')
+                        help='CSV delimiter, default: ,')
     return parser.parse_args()
+
 
 def convert_to_output_file(http_history, format_handler):
     with io.open(format_handler.filename, 'w', encoding='utf-8', newline='') as output_file:
         format_handler.set_output_file(output_file)
         format_handler.header_prefix()
-        format_handler.header_column('Time')
+        format_handler.header_column('No.')  # Comment as No.
+        format_handler.header_column('Name')
         format_handler.header_column('URL')
-        format_handler.header_column('Hostname')
-        format_handler.header_column('IP address')
-        format_handler.header_column('Port')
-        format_handler.header_column('Protocol')
         format_handler.header_column('Method')
-        format_handler.header_column('Path')
-        format_handler.header_column('Extension')
-        format_handler.header_column('Request')
-        format_handler.header_column('Status')
-        format_handler.header_column('Response length')
-        format_handler.header_column('MIME type')
-        format_handler.header_column('Response')
-        format_handler.header_column('Comment')
         format_handler.header_suffix()
         for line in http_history['items']['item']:
             format_handler.row_prefix()
-            format_handler.row_column(line['time'])
-            format_handler.row_column(line['url'])
-            format_handler.row_column(line['host']['#text'])
-            format_handler.row_column(line['host']['@ip'])
-            format_handler.row_column(line['port'])
-            format_handler.row_column(line['protocol'])
-            format_handler.row_column(line['method'])
-            format_handler.row_column(line['path'])
-            format_handler.row_column(line['extension'])
-            if '#text' in line['request']:
-                format_handler.row_column(line['request']['#text'], encoded=True)
-            else:
-                format_handler.row_column("None")
-            format_handler.row_column(line['status'])
-            format_handler.row_column(line['responselength'])
-            format_handler.row_column(line['mimetype'])
-            if '#text' in line['response']:
-                format_handler.row_column(line['response']['#text'], encoded=True)
-            else:
-                format_handler.row_column("None")
             format_handler.row_column(line['comment'])
+            format_handler.row_column('')  # Blank Name column
+            format_handler.row_column(line['url'])
+            format_handler.row_column(line['method'])
             format_handler.row_suffix()
         format_handler.footer()
+
 
 def parse_http_history(filename):
     with open(filename, 'rb') as f:
         return xmltodict.parse(f)
+
 
 def base64decode(line):
     decoded = base64.b64decode(line)
     replace = 'backslashreplace' if sys.version_info[0] >= 3 else 'replace'
     return decoded.decode('UTF-8', errors=replace)
 
+
 def set_csv_delimiter(csv_delimiter):
     if csv_delimiter:
         global _g_csv_delimiter
-        _g_csv_delimiter = unicode(csv_delimiter)
+        _g_csv_delimiter = str(csv_delimiter)
 
 
 class FormatHandlerBase(object):
     def __init__(self, filename):
-        self.filename = filename + self.FILENAME_SUFFIX
+        self.filename = f'{os.path.splitext(filename)[0]}{self.FILENAME_SUFFIX}'
 
 
 class HtmlFormatHandler(FormatHandlerBase):
@@ -133,15 +112,15 @@ class HtmlFormatHandler(FormatHandlerBase):
 
     def header_prefix(self):
         print(self.HEADER,
-                file=self.output_file)
+              file=self.output_file)
 
     def header_suffix(self):
         print('</tr></thead><tbody>',
-                file=self.output_file)
+              file=self.output_file)
 
     def header_column(self, column_name):
         print('<th>%s</th>' % column_name,
-                file=self.output_file)
+              file=self.output_file)
 
     def row_prefix(self):
         print('<tr>', file=self.output_file)
@@ -154,11 +133,11 @@ class HtmlFormatHandler(FormatHandlerBase):
         if encoded:
             content = cgi.escape(base64decode(content))
         print(template % content,
-                file=self.output_file)
+              file=self.output_file)
 
     def footer(self):
         print(self.FOOTER,
-                file=self.output_file)
+              file=self.output_file)
 
 
 # note that total number of characters that an Excel cell can contain is 32,760
@@ -167,7 +146,7 @@ class CsvFormatHandler(FormatHandlerBase):
 
     def set_output_file(self, output_file):
         self.writer = csv.writer(output_file, dialect='excel',
-                delimiter=_g_csv_delimiter)
+                                 delimiter=_g_csv_delimiter)
         self.header = []
 
     def header_prefix(self):
@@ -201,7 +180,6 @@ FORMATS = {
     'html': HtmlFormatHandler,
     'csv': CsvFormatHandler,
 }
-
 
 if __name__ == '__main__':
     main()
