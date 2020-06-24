@@ -1,19 +1,19 @@
+#! /usr/bin/env python
 """
 Python script that converts Burp Suite HTTP proxy history files to CSV or HTML files
 """
 from __future__ import unicode_literals
 from __future__ import print_function
 
+import argparse
+import base64
+import cgi
+import csv
+import io
 import os
 import sys
-import io
-import argparse
-import cgi
-import base64
-
 import xmltodict
-from backports import csv
-from builtins import str
+
 
 _g_csv_delimiter = ','
 
